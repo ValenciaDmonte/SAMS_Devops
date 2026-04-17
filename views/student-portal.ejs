@@ -597,6 +597,9 @@
       <button class="tab" data-target="analytics">
         <i class="fas fa-chart-line"></i> Analytics
       </button>
+      <button class="tab" data-target="markAttendance">
+        <i class="fas fa-camera"></i> Mark Attendance
+      </button>
     </div>
 
     <!-- Timetable Section -->
@@ -672,6 +675,53 @@
         <h3><i class="fas fa-graduation-cap"></i> Subject-wise Defaulter Overview</h3>
         <div id="subjectDefaulters"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Mark Attendance Section -->
+  <div id="markAttendance" class="section">
+
+    <!-- Face Setup Card -->
+    <div class="section-card" style="background:rgba(255,255,255,0.95); border-radius:16px; padding:28px; margin-bottom:24px; box-shadow:0 8px 32px rgba(0,0,0,0.08);">
+      <h2 style="font-size:20px; color:#1e293b; margin-bottom:6px;"><i class="fas fa-user-circle"></i> Face Setup</h2>
+      <p id="faceSetupStatus" style="color:#718096; font-size:14px; margin-bottom:16px;">Checking...</p>
+      <div id="faceSetupArea" style="display:none;">
+        <p style="color:#475569; font-size:14px; margin-bottom:14px;">Face the camera in good lighting, then click <strong>Register My Face</strong>. You can re-register anytime.</p>
+        <div style="display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start;">
+          <video id="setupVideo" autoplay muted playsinline style="width:260px; height:195px; border-radius:12px; background:#000; object-fit:cover; border:2px solid #e2e8f0;"></video>
+          <div style="display:flex; flex-direction:column; gap:10px; justify-content:center;">
+            <button onclick="startSetupCamera()" style="padding:10px 20px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600; font-size:14px;">📷 Start Camera</button>
+            <button id="registerFaceBtn" onclick="registerFace()" disabled style="padding:10px 20px; background:linear-gradient(135deg,#10b981,#059669); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600; font-size:14px; opacity:0.5;">💾 Register My Face</button>
+            <p id="setupMsg" style="font-size:13px; color:#64748b; margin:0;"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Sessions Card -->
+    <div class="section-card" style="background:rgba(255,255,255,0.95); border-radius:16px; padding:28px; box-shadow:0 8px 32px rgba(0,0,0,0.08);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+        <h2 style="font-size:20px; color:#1e293b; margin:0;"><i class="fas fa-broadcast-tower"></i> Active Sessions</h2>
+        <button onclick="loadActiveSessions()" style="padding:9px 18px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600; font-size:14px;">🔄 Refresh</button>
+      </div>
+      <div id="activeSessionsList"><p style="color:#94a3b8; text-align:center; padding:24px 0;">Loading sessions...</p></div>
+    </div>
+  </div>
+
+  <!-- Mark Attendance Modal -->
+  <div id="markModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:20px; padding:28px; width:min(440px,90vw); position:relative;">
+      <button onclick="closeMarkModal()" style="position:absolute; top:12px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:#64748b;">✕</button>
+      <h3 id="modalTitle" style="font-size:17px; color:#1e293b; margin-bottom:4px;"></h3>
+      <p id="modalTeacher" style="font-size:13px; color:#64748b; margin-bottom:18px;"></p>
+      <p style="font-size:14px; color:#475569; margin-bottom:12px;"><i class="fas fa-info-circle" style="color:#667eea;"></i> Face the camera and click <strong>Scan My Face</strong>.</p>
+      <video id="markVideo" autoplay muted playsinline style="width:100%; height:220px; border-radius:12px; background:#000; object-fit:cover; border:2px solid #e2e8f0; display:block; margin-bottom:14px;"></video>
+      <canvas id="markCanvas" style="display:none;"></canvas>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <button id="startMarkCamBtn" onclick="startMarkCamera()" style="padding:10px 20px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600;">📷 Start Camera</button>
+        <button id="scanBtn" onclick="scanFaceAndSubmit()" disabled style="padding:10px 20px; background:linear-gradient(135deg,#10b981,#059669); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600; opacity:0.5;">✅ Scan My Face</button>
+      </div>
+      <div id="modalMsg" style="margin-top:14px; padding:10px 14px; border-radius:10px; display:none; font-size:14px; font-weight:600;"></div>
     </div>
   </div>
 

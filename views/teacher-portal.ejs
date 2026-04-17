@@ -33,6 +33,31 @@
         </select>
         <button id="startBtn" onclick="startSession()" disabled>▶️ Start Attendance Session</button>
       </div>
+
+      <!-- Smart Attendance toggle -->
+      <div style="margin-top:14px; padding:16px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:600; color:#4a5568; font-size:14px;">
+          <input type="checkbox" id="smartToggle" onchange="toggleSmart()" style="width:16px;height:16px;cursor:pointer;">
+          🤳 Enable Smart Attendance (Face + Location)
+        </label>
+        <div id="smartOptions" style="display:none; margin-top:12px;">
+          <p id="geoStatus" style="font-size:13px; color:#718096; margin-bottom:10px;">📍 Location not captured yet.</p>
+          <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <button onclick="captureTeacherLocation()" style="padding:8px 16px; background:#667eea; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px;">📍 Capture My Location</button>
+            <label style="font-size:13px; color:#4a5568; font-weight:600;">
+              Radius:
+              <select id="radiusSelect" style="margin-left:6px; padding:5px 10px; border-radius:6px; border:1px solid #e2e8f0; font-size:13px;">
+                <option value="50">50 m</option>
+                <option value="100">100 m</option>
+                <option value="200" selected>200 m</option>
+                <option value="500">500 m</option>
+                <option value="0">Unlimited</option>
+              </select>
+            </label>
+          </div>
+          <p id="capturedCoords" style="font-size:12px; color:#48bb78; margin-top:8px; display:none;"></p>
+        </div>
+      </div>
     </section>
 
     <!-- Attendance Marking Section -->
@@ -156,14 +181,51 @@
       document.getElementById('startBtn').disabled = false;
     }
 
+    let _teacherLat = null, _teacherLng = null;
+
+    function toggleSmart() {
+      const on = document.getElementById('smartToggle').checked;
+      document.getElementById('smartOptions').style.display = on ? 'block' : 'none';
+      if (!on) { _teacherLat = null; _teacherLng = null; }
+    }
+
+    function captureTeacherLocation() {
+      const statusEl = document.getElementById('geoStatus');
+      if (!navigator.geolocation) { statusEl.textContent = '❌ Geolocation not supported.'; return; }
+      statusEl.textContent = '⏳ Capturing...';
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          _teacherLat = pos.coords.latitude;
+          _teacherLng = pos.coords.longitude;
+          statusEl.textContent = '✅ Location captured!';
+          const c = document.getElementById('capturedCoords');
+          c.textContent = `Lat: ${_teacherLat.toFixed(5)}, Lng: ${_teacherLng.toFixed(5)}`;
+          c.style.display = 'block';
+        },
+        err => { statusEl.textContent = `❌ ${err.message}`; },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
     async function startSession() {
       const ts_id = document.getElementById('classDropdown').value;
       if (!ts_id) return alert('Select a valid class');
 
+      const smartOn = document.getElementById('smartToggle').checked;
+      if (smartOn && (_teacherLat === null || _teacherLng === null))
+        return alert('Smart Attendance is enabled. Please capture your location first.');
+
+      const body = { ts_id };
+      if (smartOn) {
+        body.lat    = _teacherLat;
+        body.lng    = _teacherLng;
+        body.radius = parseInt(document.getElementById('radiusSelect').value, 10);
+      }
+
       const res = await fetch('/api/teacher/start-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ ts_id })
+        body: JSON.stringify(body)
       });
 
       const data = await res.json();

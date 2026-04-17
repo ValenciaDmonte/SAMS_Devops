@@ -159,6 +159,44 @@
         .back-link a:hover {
             text-decoration: underline;
         }
+
+        .forgot-link {
+            text-align: right;
+            margin-top: -10px;
+            margin-bottom: 20px;
+        }
+
+        .forgot-link a {
+            color: #e74c3c;
+            text-decoration: none;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+
+        .forgot-link a:hover {
+            text-decoration: underline;
+        }
+
+        .otp-section {
+            display: none;
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 15px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
     </style>
 </head>
 <body>
@@ -171,7 +209,7 @@
         <div class="auth-body">
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('login')">Login</button>
-                
+                <button class="tab" onclick="switchTab('register')">Register</button>
             </div>
 
             <div id="message" class="message"></div>
@@ -189,9 +227,63 @@
                     </div>
                     <button type="submit" class="btn">Login</button>
                 </form>
+                <div class="forgot-link">
+                    <a onclick="showForgotPassword()">Forgot Password?</a>
+                </div>
+
+                <!-- Forgot Password - Step 1 -->
+                <div id="forgot-box" style="display:none; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
+                    <h3 style="margin-bottom: 15px; color: #333; font-size: 1em;">Reset Password</h3>
+                    <div class="form-group">
+                        <label>Registered Email</label>
+                        <input type="email" id="forgot-email" placeholder="Enter your email" required>
+                    </div>
+                    <button class="btn" onclick="sendOtp()">Send OTP</button>
+                    <button class="btn-secondary" onclick="hideForgotPassword()">Cancel</button>
+                </div>
+
+                <!-- Forgot Password - Step 2 -->
+                <div id="otp-box" class="otp-section" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
+                    <h3 style="margin-bottom: 15px; color: #333; font-size: 1em;">Enter OTP & New Password</h3>
+                    <div class="form-group">
+                        <label>OTP</label>
+                        <input type="text" id="otp-input" placeholder="6-digit OTP" maxlength="6" required>
+                    </div>
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="new-password" placeholder="Enter new password" required>
+                    </div>
+                    <button class="btn" onclick="resetPassword()">Reset Password</button>
+                </div>
             </div>
 
-            
+            <!-- Register Form -->
+            <div id="register-form" class="form-content">
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label>Institution / School Name</label>
+                        <input type="text" name="institution_name" placeholder="e.g. Springfield High School" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" placeholder="Used for password reset" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" name="password" id="reg-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <input type="password" name="confirmPassword" id="reg-confirm" required>
+                    </div>
+                    <button type="submit" class="btn">Create Admin Account</button>
+                </form>
+            </div>
+
             <div class="back-link">
                 <a href="/">← Back to Home</a>
             </div>
@@ -259,7 +351,110 @@
             }
         }
 
-        
+        async function handleRegister(event) {
+            event.preventDefault();
+            hideMessage();
+
+            const form = event.target;
+            const formData = new FormData(form);
+            const password = formData.get('password');
+            const confirmPassword = formData.get('confirmPassword');
+
+            if (password !== confirmPassword) {
+                showMessage('Passwords do not match.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: formData.get('username'), password, email: formData.get('email'), institution_name: formData.get('institution_name') })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('Admin account created! Please log in.', 'success');
+                    form.reset();
+                    setTimeout(() => {
+                        document.querySelectorAll('.tab')[0].click();
+                    }, 1500);
+                } else {
+                    showMessage(result.error || 'Registration failed.', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error. Please try again.', 'error');
+            }
+        }
+
+        let forgotEmail = '';
+
+        function showForgotPassword() {
+            hideMessage();
+            document.getElementById('forgot-box').style.display = 'block';
+            document.getElementById('otp-box').style.display = 'none';
+        }
+
+        function hideForgotPassword() {
+            document.getElementById('forgot-box').style.display = 'none';
+            document.getElementById('otp-box').style.display = 'none';
+        }
+
+        async function sendOtp() {
+            forgotEmail = document.getElementById('forgot-email').value.trim();
+            if (!forgotEmail) { showMessage('Please enter your email.', 'error'); return; }
+            hideMessage();
+
+            try {
+                const response = await fetch('/api/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: forgotEmail, role: 'Admin' })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('OTP sent to your email. Check your inbox.', 'success');
+                    document.getElementById('forgot-box').style.display = 'none';
+                    document.getElementById('otp-box').style.display = 'block';
+                } else {
+                    showMessage(result.message || result.error || 'Failed to send OTP.', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error. Please try again.', 'error');
+            }
+        }
+
+        async function resetPassword() {
+            const otp = document.getElementById('otp-input').value.trim();
+            const newPassword = document.getElementById('new-password').value;
+
+            if (!otp || !newPassword) { showMessage('Please fill in all fields.', 'error'); return; }
+            hideMessage();
+
+            try {
+                const response = await fetch('/api/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: forgotEmail, otp, newPassword })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('Password reset successful! Please log in.', 'success');
+                    document.getElementById('otp-box').style.display = 'none';
+                    document.getElementById('otp-input').value = '';
+                    document.getElementById('new-password').value = '';
+                } else {
+                    showMessage(result.message || result.error || 'Reset failed.', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error. Please try again.', 'error');
+            }
+        }
     </script>
 </body>
 </html>

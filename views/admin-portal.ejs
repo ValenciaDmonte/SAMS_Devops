@@ -81,8 +81,7 @@
         <form id="teacher-form" onsubmit="registerTeacher(event)">
           <input name="name" placeholder="Full Name" required />
           <input name="department" placeholder="Department" required />
-          <input name="email" placeholder="Email" />
-          <input name="username" placeholder="Username" required />
+          <input name="email" type="email" placeholder="Email" required />
           <input name="password" type="password" placeholder="Password" required />
           <div>
             <button type="submit">Register Teacher</button>
@@ -348,7 +347,6 @@
       form.name.value = t.name;
       form.department.value = t.department;
       form.email.value = t.email;
-      form.username.value = t.username;
       form.password.value = "";
       document.getElementById("teacher-cancel").style.display = "inline";
       form.onsubmit = async (e) => {
