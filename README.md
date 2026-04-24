@@ -16,7 +16,6 @@
 **Smart Attendance Management System (SAMS)** is a full-stack web application designed to **automate and streamline attendance management** in educational institutions.
 It enables **administrators, teachers, and students** to efficiently manage classes, schedules, and attendance records—enhanced with **AI-powered chatbot assistance** and **intelligent email notifications**.
 
----
 
 ## ✨ Key Highlights
 
@@ -146,3 +145,4 @@ Visit: **[http://localhost:10000](http://localhost:10000)**
 
 
 
+sonarqube token: sqp_c4326f1f8bfc9573516d4f9ff6096ee4280141a7

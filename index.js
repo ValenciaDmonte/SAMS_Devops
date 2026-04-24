@@ -1,9 +1,17 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const promClient = require('prom-client');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Prometheus metrics
+promClient.collectDefaultMetrics();
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', promClient.register.contentType);
+  res.end(await promClient.register.metrics());
+});
 
 // Middleware
 app.use(express.json());
