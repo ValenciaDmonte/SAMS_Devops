@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME    = "valenciadmonte/sams"
+        IMAGE_NAME    = "valdoc2005/sams"
         IMAGE_TAG     = "${BUILD_NUMBER}"
         SONAR_PROJECT = "sams"
     }
@@ -38,7 +38,7 @@ pipeline {
 
         stage('Quality Gate') {
             steps {
-                timeout(time: 2, unit: 'MINUTES') {
+                timeout(time: 5, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
             }
