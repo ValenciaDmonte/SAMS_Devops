@@ -244,3 +244,72 @@ All manifests are in the `k8s/` directory:
 | `deployment.yaml`         | 2-replica app deployment           |
 | `service.yaml`            | Exposes the app via LoadBalancer   |
 | `postgres-statefulset.yaml` | PostgreSQL with persistent storage |
+
+---
+
+## 🔄 Starting the Environment
+
+Follow these steps every time you restart your machine or Docker Desktop.
+
+### Step 1 — Start Docker Desktop
+Open Docker Desktop and wait for it to fully start (the whale icon in the system tray stops animating).
+
+### Step 2 — Start Jenkins and SonarQube
+```bash
+docker start jenkins sonarqube
+```
+
+### Step 3 — Start the SAMS Application (Docker Compose)
+```bash
+docker compose up -d
+```
+This starts the 3-container setup: Nginx, Node.js app, and PostgreSQL.
+
+### Step 4 — Start Minikube
+```bash
+minikube start
+```
+
+### Step 5 — Recreate the Docker Network
+This is required every time because the network is lost on restart.
+```bash
+docker network create devops-network
+docker network connect devops-network jenkins
+docker network connect devops-network sonarqube
+```
+
+### Step 6 — Re-add SonarQube hostname inside Jenkins
+This is required every time because `/etc/hosts` inside the container resets on restart.
+```bash
+MSYS_NO_PATHCONV=1 docker exec -u root jenkins bash -c "echo '172.19.0.3 sonarqube' >> /etc/hosts"
+```
+
+### Step 7 — Verify Everything is Running
+```bash
+docker ps
+kubectl get pods -n sams
+```
+You should see: `jenkins`, `sonarqube`, `sams-nginx-1`, `sams-app-1`, `sams-db-1`, `minikube` all running.
+Kubernetes should show 2 running replicas of `sams-app`.
+
+### Access Points After Startup
+
+| Service         | URL                                    |
+| --------------- | -------------------------------------- |
+| SAMS App        | http://localhost:8080                  |
+| Jenkins         | http://localhost:8081                  |
+| SonarQube       | http://localhost:9000                  |
+| Prometheus Metrics | http://localhost:8080/metrics       |
+
+---
+
+## 🛑 Shutting Down
+
+### Stop all services
+```bash
+docker stop jenkins sonarqube
+docker compose down
+minikube stop
+```
+
+> **Note:** Do not run `docker rm jenkins` or `docker volume rm jenkins_home` — this will delete all Jenkins build history and configuration.
