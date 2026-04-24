@@ -29,7 +29,9 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh 'npx sonar-scanner'
+                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                        sh 'npx sonar-scanner -Dsonar.login=$SONAR_TOKEN'
+                    }
                 }
             }
         }
