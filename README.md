@@ -102,8 +102,13 @@ This makes attendance tracking **interactive, intuitive, and student-friendly**.
 | Database        | PostgreSQL                  |
 | AI Chatbot      | Groq API (LLaMA-3.3-70B)    |
 | Notifications   | Nodemailer (SMTP)           |
-| Hosting         | Render                      |
 | Version Control | Git & GitHub                |
+| Containerization| Docker, Docker Compose      |
+| Orchestration   | Kubernetes (Minikube)       |
+| CI/CD           | Jenkins                     |
+| Code Quality    | SonarQube                   |
+| Reverse Proxy   | Nginx                       |
+| Monitoring      | Prometheus, prom-client     |
 
 ---
 
@@ -145,4 +150,97 @@ Visit: **[http://localhost:10000](http://localhost:10000)**
 
 
 
-sonarqube token: sqp_c4326f1f8bfc9573516d4f9ff6096ee4280141a7
+---
+
+## 🚀 DevOps CI/CD Pipeline
+
+This project includes a complete DevOps pipeline using Docker, Kubernetes, Jenkins, and SonarQube.
+
+### Pipeline Flow
+
+```
+GitHub Push → Jenkins → SonarQube Analysis → Docker Build → Docker Hub → Kubernetes Deployment
+```
+
+### Architecture
+
+| Component     | Role                                      | URL                          |
+| ------------- | ----------------------------------------- | ---------------------------- |
+| Jenkins       | CI/CD pipeline automation                 | http://localhost:8081        |
+| SonarQube     | Static code analysis & quality gate       | http://localhost:9000        |
+| Docker Hub    | Container image registry                  | hub.docker.com/r/valdoc2005/sams |
+| Kubernetes    | Container orchestration (2 replicas)      | Minikube (local cluster)     |
+| Nginx         | Reverse proxy (3-container Docker setup)  | http://localhost:8080        |
+| Prometheus    | Metrics collection via `/metrics` endpoint| -                            |
+
+### Jenkins Pipeline Stages
+
+1. **Checkout** — pulls latest code from GitHub
+2. **Install Dependencies** — runs `npm ci`
+3. **SonarQube Analysis** — scans code for bugs, vulnerabilities, code smells
+4. **Quality Gate** — fails the build if quality standards are not met
+5. **Docker Build** — builds image `valdoc2005/sams:<build-number>`
+6. **Docker Push** — pushes image to Docker Hub
+7. **Deploy to Kubernetes** — rolls out updated image to the sams namespace
+
+### How to Verify the Pipeline
+
+**1. Jenkins — View pipeline status**
+```
+http://localhost:8081/job/sams-pipeline/
+```
+Open the latest build to see all stages and logs.
+
+**2. SonarQube — View code quality results**
+```
+http://localhost:9000
+```
+Open the SAMS project to see Quality Gate status, bugs, vulnerabilities, and code smells.
+
+**3. Docker Hub — View pushed images**
+```
+https://hub.docker.com/r/valdoc2005/sams/tags
+```
+Each successful build pushes a new versioned tag (`:15`, `:16`, etc.) plus `:latest`.
+
+**4. Kubernetes — Check running pods**
+```bash
+kubectl get pods -n sams
+kubectl get deployments -n sams
+```
+Should show 2 running replicas of `sams-app`.
+
+**5. Running Application**
+```
+http://localhost:8080
+```
+The SAMS app served through Nginx reverse proxy.
+
+**6. Prometheus Metrics**
+```
+http://localhost:8080/metrics
+```
+Exposes Node.js runtime metrics collected by prom-client.
+
+### Docker Compose (Local 3-Container Setup)
+
+```bash
+docker compose up
+```
+
+Starts three containers:
+- **nginx** — reverse proxy on port 8080
+- **app** — Node.js application on port 10000
+- **db** — PostgreSQL database on port 5432
+
+### Kubernetes Manifests
+
+All manifests are in the `k8s/` directory:
+
+| File                      | Description                        |
+| ------------------------- | ---------------------------------- |
+| `namespace.yaml`          | Creates the `sams` namespace       |
+| `secret.yaml`             | Stores environment secrets         |
+| `deployment.yaml`         | 2-replica app deployment           |
+| `service.yaml`            | Exposes the app via LoadBalancer   |
+| `postgres-statefulset.yaml` | PostgreSQL with persistent storage |
