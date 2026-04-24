@@ -63,8 +63,8 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 withKubeConfig([credentialsId: 'kubeconfig']) {
-                    sh "kubectl set image deployment/sams-app sams=${IMAGE_NAME}:${IMAGE_TAG} -n sams"
-                    sh "kubectl rollout status deployment/sams-app -n sams"
+                    sh "kubectl set image deployment/sams-app sams=${IMAGE_NAME}:${IMAGE_TAG} -n sams --insecure-skip-tls-verify"
+                    sh "kubectl rollout status deployment/sams-app -n sams --insecure-skip-tls-verify"
                 }
             }
         }
