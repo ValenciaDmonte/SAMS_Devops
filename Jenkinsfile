@@ -62,7 +62,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                withKubeConfig([kubeConfigPath: '/var/jenkins_home/kubeconfig-new.txt']) {
+                withKubeConfig([credentialsId: 'kubeconfig', serverUrl: 'https://host.docker.internal:49705']) {
                     sh "kubectl set image deployment/sams-app sams=${IMAGE_NAME}:${IMAGE_TAG} -n sams --insecure-skip-tls-verify"
                     sh "kubectl rollout status deployment/sams-app -n sams --insecure-skip-tls-verify"
                 }
